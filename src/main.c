@@ -2,13 +2,15 @@
 #include <stdlib.h>
 #include "space_objects.h"
 
-#define POINT '+'
-
 #define STOP 0
 #define LEFT 1
 #define RIGHT 2
 
+#define FIRE 5
+
 #define EXIT -1
+
+void logic(char** board, Coord* cur);
 
 void init() {
     initscr();
@@ -59,6 +61,8 @@ int check_pressing() {
         return LEFT;
     if (keypress == 'd')
         return RIGHT;
+    if (keypress == ' ')
+        return FIRE;
     if (keypress == 'q')
         return EXIT;
     return STOP;
@@ -73,40 +77,65 @@ void delete_starship(char** board, Pixel* starship, int k) {
         put(board, starship[i].x, starship[i].y, ' ');
     }
 }
+void fire(char** board, Coord cur, Coord* current) {
+    put(board, cur.x, cur.y, '*');
+    while (cur.x > 0) {
+        put(board, cur.x, cur.y, ' ');
+        --cur.x;
+        put(board, cur.x, cur.y, '*');
+        refresh();
+        logic(board, current);
+        napms(27);
+    }
+    put(board, cur.x, cur.y, ' ');
+}
 void logic(char** board, Coord* cur) {
     int key;
     key = check_pressing();
     if (key == LEFT) {
-        Pixel starship[11];
+        Pixel starship[SPACESHIP_COUNT];
         create_spaceship(*cur, starship);
-        delete_starship(board, starship, 11);
+        delete_starship(board, starship, SPACESHIP_COUNT);
         --cur->y;
         create_spaceship(*cur, starship);
-        put_starship(board, starship, 11);
+        put_starship(board, starship, SPACESHIP_COUNT);
         return;
     }
     if (key == RIGHT) {
-        Pixel starship[11];
+        Pixel starship[SPACESHIP_COUNT];
         create_spaceship(*cur, starship);
-        delete_starship(board, starship, 11);
+        delete_starship(board, starship, SPACESHIP_COUNT);
         ++cur->y;
         create_spaceship(*cur, starship);
-        put_starship(board, starship, 11);
+        put_starship(board, starship, SPACESHIP_COUNT);
+        return;
+    }
+    if (key == FIRE) {
+        Coord shot;
+        shot.x = cur->x - 3;
+        shot.y = cur->y;
+        fire(board, shot, cur);
         return;
     }
     if (key == EXIT) {
         finish();
     }
 }
+void start_screen() {
+    move(1, 1);
+    printw(GAME_LOGO);
+    printw(GAME_RULE);
+    refresh();
+    napms(1000);
+}
 int main() {
     init();
+    start_screen();
     char** board;
     Coord current;
-    current.x = LINES - 1;
+    current.x = LINES - 2;
     current.y = COLS / 2 - 1;
     board = init_board();
-    put(board, LINES - 1, COLS / 2 - 1, POINT);
-    refresh();
     while (1) {
         logic(board, &current);
     }
