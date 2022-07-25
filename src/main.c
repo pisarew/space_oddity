@@ -1,5 +1,6 @@
 #include <ncurses.h>
 #include <stdlib.h>
+#include "space_objects.h"
 
 #define POINT '+'
 
@@ -8,17 +9,6 @@
 #define RIGHT 2
 
 #define EXIT -1
-  /*
-  ||
- /||\
- |  |
-<||||>
-*/
-
-typedef struct Coord {
-    int x;
-    int y;
-} Coord;
 
 void init() {
     initscr();
@@ -73,20 +63,35 @@ int check_pressing() {
         return EXIT;
     return STOP;
 }
+void put_starship(char** board, Pixel* starship, int k) {
+    for (int i = 0; i < k; ++i) {
+        put(board, starship[i].x, starship[i].y, starship[i].symbol);
+    }
+}
+void delete_starship(char** board, Pixel* starship, int k) {
+    for (int i = 0; i < k; ++i) {
+        put(board, starship[i].x, starship[i].y, ' ');
+    }
+}
 void logic(char** board, Coord* cur) {
     int key;
     key = check_pressing();
     if (key == LEFT) {
-        put(board, cur->x, cur->y, ' ');
+        Pixel starship[11];
+        create_spaceship(*cur, starship);
+        delete_starship(board, starship, 11);
         --cur->y;
-        --cur->y;
-        put(board, cur->x, cur->y, POINT);
+        create_spaceship(*cur, starship);
+        put_starship(board, starship, 11);
         return;
     }
     if (key == RIGHT) {
-        put(board, cur->x, cur->y, ' ');
+        Pixel starship[11];
+        create_spaceship(*cur, starship);
+        delete_starship(board, starship, 11);
         ++cur->y;
-        put(board, cur->x, cur->y, POINT);
+        create_spaceship(*cur, starship);
+        put_starship(board, starship, 11);
         return;
     }
     if (key == EXIT) {
@@ -103,7 +108,6 @@ int main() {
     put(board, LINES - 1, COLS / 2 - 1, POINT);
     refresh();
     while (1) {
-//        napms(1);
         logic(board, &current);
     }
     return 0;
